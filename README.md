@@ -2,12 +2,16 @@
 
 [![CI](https://github.com/sbarbosa25/pergunte-ao-comex/actions/workflows/ci.yml/badge.svg)](https://github.com/sbarbosa25/pergunte-ao-comex/actions/workflows/ci.yml)
 
-Faça uma pergunta em português sobre uma operação de comércio exterior e receba a resposta em tabela e gráfico. A IA escreve o SQL, o DuckDB executa e uma avaliação automática mede, a cada commit, se a IA continua acertando.
+Faça uma pergunta em português sobre uma operação de comércio exterior e receba a resposta em tabela e gráfico. O projeto foi desenhado para uma IA escrever o SQL, o DuckDB executar e uma avaliação automática medir, a cada commit, se a IA continua acertando.
 
-Exemplo de uso (os números são os da base deste repositório):
+**A IA é opcional e este repositório não tem chave de API configurada.** Tudo o que aparece rodando aqui (a página, o modo demonstração e o CI) usa SQL de gabarito escrito à mão, sem chamar modelo nenhum. Quem quiser ver a IA respondendo perguntas livres usa a própria chave, como descrito em [Onde a IA entra](#onde-a-ia-entra).
+
+Exemplo de uso no modo demonstração (os números são os da base deste repositório):
 
 ```
-$ pergunte-comex "Qual é o atraso médio em dias por modal?"
+$ pergunte-comex --demo "Qual é o atraso médio em dias por modal?"
+
+Modo demonstração (sem IA). Pergunta reconhecida: Qual é o atraso médio em dias por modal?
 
 SQL:
 SELECT modal, round(avg(dias_atraso), 2) AS atraso_medio_dias
@@ -45,7 +49,7 @@ pergunte-comex --demo                              # menu com as 15 perguntas
 pergunte-comex --demo "atraso médio por modal"     # ou pergunte direto
 ```
 
-Na primeira execução o banco é criado sozinho. O modo demonstração não usa IA: ele encontra no catálogo a pergunta mais parecida com a digitada e roda o SQL de gabarito dela. Todo o resto é o caminho real (trava de segurança, consulta no DuckDB, tabela e gráfico). Perguntas livres, fora do catálogo, precisam da IA e estão descritas em [Como rodar](#como-rodar).
+Na primeira execução o banco é criado sozinho. O modo demonstração não usa IA: ele encontra no catálogo a pergunta mais parecida com a digitada e roda o SQL de gabarito dela. Todo o resto é o caminho real (trava de segurança, consulta no DuckDB, tabela e gráfico). Perguntas livres, fora do catálogo, precisam da IA e estão descritas em [Onde a IA entra](#onde-a-ia-entra).
 
 O projeto junta três coisas que costumam aparecer separadas em portfólio: engenharia de dados (geração da base, ETL, validações), IA aplicada (linguagem natural para SQL, com travas de segurança) e fluxo de trabalho em Git (branches, pull requests e CI no GitHub Actions).
 
@@ -96,14 +100,30 @@ pytest                              # roda os testes
 pergunte-comex --exemplos           # lista as perguntas do catálogo
 ```
 
-Para perguntas livres, respondidas pela IA, é preciso uma chave da API da Anthropic:
+Nada disso usa IA nem chave de API.
+
+## Onde a IA entra
+
+A IA tem um papel só: traduzir a pergunta em SQL (`src/pergunte_comex/ia.py`). O que vem antes e depois (ETL, trava de segurança, consulta, tabela e gráfico) é o mesmo código com ou sem ela.
+
+| | Sem chave | Com chave própria |
+| --- | --- | --- |
+| Página de demonstração | funciona | funciona |
+| `pergunte-comex --demo` | funciona, 15 perguntas do catálogo | funciona |
+| `pergunte-comex "pergunta livre"` | não roda, indica o modo demonstração | a IA escreve o SQL |
+| Testes e CI | rodam | rodam |
+| Avaliação da IA (`--ia`) | não roda | mede o acerto nas 15 perguntas |
+
+Este repositório fica na coluna "sem chave", por escolha: é público e o uso da API é cobrado. A consequência é que a chamada real ao modelo e a avaliação da IA ainda não foram executadas aqui, então não há taxa de acerto publicada. O caminho da IA é coberto pelos testes com um gerador falso que segue o mesmo contrato do gerador real.
+
+Para usar a IA na sua máquina, com uma chave da API da Anthropic:
 
 ```bash
 export ANTHROPIC_API_KEY="sua-chave"
 pergunte-comex "Quais os 3 clientes com maior valor CIF total?"
 ```
 
-O modelo padrão é `claude-sonnet-5-5`. Para trocar, use `--modelo` ou a variável `PERGUNTE_COMEX_MODELO`.
+O modelo padrão é `claude-sonnet-5-5`. Para trocar, use `--modelo` ou a variável `PERGUNTE_COMEX_MODELO`. A chave fica só no seu ambiente; não a coloque em arquivos do repositório.
 
 ## Segurança do SQL gerado
 
@@ -122,7 +142,7 @@ python -m avaliacao.avaliar --gabarito   # confere os gabaritos, sem IA
 python -m avaliacao.avaliar --ia         # avalia a IA e gera saida/avaliacao.md
 ```
 
-A avaliação reprova se o acerto ficar abaixo de 80%. Uma limitação conhecida: a comparação é exata, então uma resposta correta em outro formato (o mês como `2026-01` em vez de data, por exemplo) conta como erro.
+O modo `--gabarito` roda em todo commit. O modo `--ia` precisa de chave e ainda não foi executado neste repositório. Ele reprova se o acerto ficar abaixo de 80%. Uma limitação conhecida: a comparação é exata, então uma resposta correta em outro formato (o mês como `2026-01` em vez de data, por exemplo) conta como erro.
 
 ## Integração contínua
 
@@ -138,10 +158,11 @@ O workflow `.github/workflows/ci.yml` roda em todo push na `main` e em todo pull
 
 Um segundo workflow, `.github/workflows/pages.yml`, gera a página e publica no GitHub Pages a cada push na `main`. A página nunca é editada à mão: se a base ou um gabarito muda, ela é refeita.
 
-Um segundo job avalia a IA de verdade. Ele só roda se o repositório tiver o secret `ANTHROPIC_API_KEY` (Settings, Secrets and variables, Actions); sem o secret, o job é pulado e avisa no resumo.
+O CI também tem um job que avalia a IA de verdade, e ele está desligado aqui. Ele só roda se o repositório tiver o secret `ANTHROPIC_API_KEY` (Settings, Secrets and variables, Actions); sem o secret, como é o caso, o job é pulado e avisa no resumo. Quem fizer um fork e cadastrar a própria chave passa a ter a taxa de acerto publicada a cada push.
 
 ## Próximos passos
 
+- Rodar a avaliação da IA e publicar a taxa de acerto
 - Perguntas livres pelo navegador, com a IA respondendo
 - Resposta em texto corrido além da tabela
 - Mais perguntas na avaliação, incluindo perguntas que a base não consegue responder
