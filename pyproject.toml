@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pergunte-comex"
+version = "0.1.0"
+description = "Perguntas em português sobre uma operação de comércio exterior, respondidas com SQL gerado por IA."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Samuel Reis" }]
+dependencies = [
+    "duckdb>=1.0",
+    "anthropic>=0.40",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+pergunte-comex = "pergunte_comex.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests", "avaliacao"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pergunte_comex", "avaliacao"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
