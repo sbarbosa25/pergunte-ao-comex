@@ -24,6 +24,9 @@ pergunte-comex = "pergunte_comex.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+pergunte_comex = ["modelos/*.html"]
+
 [tool.ruff]
 line-length = 100
 src = ["src", "tests", "avaliacao"]

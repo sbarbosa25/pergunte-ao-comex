@@ -9,5 +9,6 @@ venv/
 *.duckdb
 *.duckdb.wal
 saida/
+site/
 .ipynb_checkpoints/
 .DS_Store

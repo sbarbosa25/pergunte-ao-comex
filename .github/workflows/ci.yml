@@ -36,6 +36,8 @@ jobs:
         run: |
           rm -f dados/comex.duckdb
           pergunte-comex --demo "atraso médio por modal"
+      - name: Página de demonstração é gerada
+        run: python -m pergunte_comex.pagina
 
   avaliacao-ia:
     name: Avaliação da IA
