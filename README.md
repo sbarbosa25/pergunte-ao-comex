@@ -9,7 +9,7 @@ Exemplo de uso (os números são os da base deste repositório):
 ```
 $ pergunte-comex "Qual é o atraso médio em dias por modal?"
 
-SQL gerado:
+SQL:
 SELECT modal, round(avg(dias_atraso), 2) AS atraso_medio_dias
 FROM processos
 WHERE status <> 'Cancelado' AND dias_atraso IS NOT NULL
@@ -23,6 +23,23 @@ Aéreo                   -0,02
 
 Gráfico salvo em saida/resposta.png
 ```
+
+![Gráfico gerado para a pergunta sobre atraso médio por modal](docs/exemplo-grafico.png)
+
+## Teste em 1 minuto, sem chave de IA
+
+Não precisa de conta nem de chave de API para experimentar. O modo demonstração responde a partir de um catálogo de 15 perguntas prontas:
+
+```bash
+git clone https://github.com/sbarbosa25/pergunte-ao-comex.git
+cd pergunte-ao-comex
+pip install -e .
+
+pergunte-comex --demo                              # menu com as 15 perguntas
+pergunte-comex --demo "atraso médio por modal"     # ou pergunte direto
+```
+
+Na primeira execução o banco é criado sozinho. O modo demonstração não usa IA: ele encontra no catálogo a pergunta mais parecida com a digitada e roda o SQL de gabarito dela. Todo o resto é o caminho real (trava de segurança, consulta no DuckDB, tabela e gráfico). Perguntas livres, fora do catálogo, precisam da IA e estão descritas em [Como rodar](#como-rodar).
 
 O projeto junta três coisas que costumam aparecer separadas em portfólio: engenharia de dados (geração da base, ETL, validações), IA aplicada (linguagem natural para SQL, com travas de segurança) e fluxo de trabalho em Git (branches, pull requests e CI no GitHub Actions).
 
@@ -44,6 +61,7 @@ pergunta -> IA escreve o SQL -> trava de segurança -> DuckDB -> tabela + gráfi
 | ETL | `src/pergunte_comex/etl.py` | Limpa o CSV, deriva colunas e roda 8 validações |
 | Dicionário de dados | `src/pergunte_comex/esquema.py` | Descrição das colunas, usada pelo ETL e pela IA |
 | IA | `src/pergunte_comex/ia.py` | Monta o prompt e pede o SQL ao modelo |
+| Demonstração | `src/pergunte_comex/demo.py` | Responde sem IA, a partir do catálogo de perguntas |
 | Segurança | `src/pergunte_comex/sql_seguro.py` | Só deixa passar um SELECT |
 | Consulta | `src/pergunte_comex/responder.py` | Executa em conexão somente leitura |
 | Saída | `src/pergunte_comex/saida.py` | Tabela no terminal e gráfico em PNG |
@@ -68,9 +86,10 @@ pip install -e ".[dev]"
 
 python -m pergunte_comex.etl        # cria dados/comex.duckdb
 pytest                              # roda os testes
+pergunte-comex --exemplos           # lista as perguntas do catálogo
 ```
 
-Para fazer perguntas é preciso uma chave da API da Anthropic:
+Para perguntas livres, respondidas pela IA, é preciso uma chave da API da Anthropic:
 
 ```bash
 export ANTHROPIC_API_KEY="sua-chave"
@@ -106,7 +125,8 @@ O workflow `.github/workflows/ci.yml` roda em todo push na `main` e em todo pull
 - regeneração da base, conferindo que o CSV versionado é o que o gerador produz;
 - ETL com as validações;
 - testes com pytest;
-- conferência dos gabaritos.
+- conferência dos gabaritos;
+- modo demonstração rodando de ponta a ponta, sem chave.
 
 Um segundo job avalia a IA de verdade. Ele só roda se o repositório tiver o secret `ANTHROPIC_API_KEY` (Settings, Secrets and variables, Actions); sem o secret, o job é pulado e avisa no resumo.
 
