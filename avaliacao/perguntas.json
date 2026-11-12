@@ -1,0 +1,77 @@
+[
+  {
+    "id": "total-processos",
+    "pergunta": "Quantos processos não cancelados existem na base?",
+    "sql_gabarito": "SELECT count(*) AS processos FROM processos WHERE status <> 'Cancelado'"
+  },
+  {
+    "id": "processos-por-tipo",
+    "pergunta": "Quantos processos de importação e de exportação temos, sem contar os cancelados?",
+    "sql_gabarito": "SELECT tipo_operacao, count(*) AS processos FROM processos WHERE status <> 'Cancelado' GROUP BY tipo_operacao ORDER BY processos DESC"
+  },
+  {
+    "id": "cancelados",
+    "pergunta": "Quantos processos foram cancelados?",
+    "sql_gabarito": "SELECT count(*) AS cancelados FROM processos WHERE status = 'Cancelado'"
+  },
+  {
+    "id": "top5-paises-importacao-fob",
+    "pergunta": "Quais são os 5 países de origem com maior valor FOB total nas importações?",
+    "sql_gabarito": "SELECT pais_origem, round(sum(valor_fob_usd), 2) AS valor_fob_usd FROM processos WHERE tipo_operacao = 'Importação' AND status <> 'Cancelado' GROUP BY pais_origem ORDER BY valor_fob_usd DESC LIMIT 5"
+  },
+  {
+    "id": "atraso-medio-por-modal",
+    "pergunta": "Qual é o atraso médio em dias por modal?",
+    "sql_gabarito": "SELECT modal, round(avg(dias_atraso), 2) AS atraso_medio_dias FROM processos WHERE status <> 'Cancelado' AND dias_atraso IS NOT NULL GROUP BY modal ORDER BY atraso_medio_dias DESC"
+  },
+  {
+    "id": "percentual-atrasados-maritimo",
+    "pergunta": "Qual o percentual de processos marítimos que chegaram com atraso?",
+    "sql_gabarito": "SELECT round(100.0 * sum(CASE WHEN atrasado THEN 1 ELSE 0 END) / count(*), 2) AS percentual_atrasados FROM processos WHERE modal = 'Marítimo' AND status <> 'Cancelado' AND atrasado IS NOT NULL"
+  },
+  {
+    "id": "transportador-mais-atrasa",
+    "pergunta": "Qual transportador marítimo tem o maior atraso médio em dias?",
+    "sql_gabarito": "SELECT transportador, round(avg(dias_atraso), 2) AS atraso_medio_dias FROM processos WHERE modal = 'Marítimo' AND status <> 'Cancelado' AND dias_atraso IS NOT NULL GROUP BY transportador ORDER BY atraso_medio_dias DESC LIMIT 1"
+  },
+  {
+    "id": "processos-por-canal",
+    "pergunta": "Quantos processos caíram em cada canal de parametrização?",
+    "sql_gabarito": "SELECT canal, count(*) AS processos FROM processos WHERE status <> 'Cancelado' AND canal IS NOT NULL GROUP BY canal ORDER BY processos DESC"
+  },
+  {
+    "id": "desembaraco-medio-por-canal",
+    "pergunta": "Quantos dias em média leva o desembaraço em cada canal?",
+    "sql_gabarito": "SELECT canal, round(avg(dias_desembaraco), 2) AS dias_desembaraco_medio FROM processos WHERE status <> 'Cancelado' AND dias_desembaraco IS NOT NULL GROUP BY canal ORDER BY dias_desembaraco_medio DESC"
+  },
+  {
+    "id": "top3-clientes-cif",
+    "pergunta": "Quais os 3 clientes com maior valor CIF total?",
+    "sql_gabarito": "SELECT cliente, round(sum(valor_cif_usd), 2) AS valor_cif_usd FROM processos WHERE status <> 'Cancelado' GROUP BY cliente ORDER BY valor_cif_usd DESC LIMIT 3"
+  },
+  {
+    "id": "containers-por-porto-importacao",
+    "pergunta": "Quantos containers foram importados por cada porto brasileiro de destino?",
+    "sql_gabarito": "SELECT local_destino, sum(qtd_containers) AS containers FROM processos WHERE tipo_operacao = 'Importação' AND modal = 'Marítimo' AND status <> 'Cancelado' GROUP BY local_destino ORDER BY containers DESC"
+  },
+  {
+    "id": "frete-medio-container-china",
+    "pergunta": "Qual o frete médio por container nas importações marítimas vindas da China?",
+    "sql_gabarito": "SELECT round(sum(frete_usd) / sum(qtd_containers), 2) AS frete_medio_por_container_usd FROM processos WHERE tipo_operacao = 'Importação' AND modal = 'Marítimo' AND pais_origem = 'China' AND status <> 'Cancelado'"
+  },
+  {
+    "id": "processos-abertos-por-mes-2026",
+    "pergunta": "Quantos processos foram abertos em cada mês de 2026?",
+    "sql_gabarito": "SELECT CAST(date_trunc('month', data_abertura) AS DATE) AS mes, count(*) AS processos FROM processos WHERE year(data_abertura) = 2026 AND status <> 'Cancelado' GROUP BY mes ORDER BY mes"
+  },
+  {
+    "id": "em-transito",
+    "pergunta": "Quantos processos estão em trânsito neste momento?",
+    "sql_gabarito": "SELECT count(*) AS em_transito FROM processos WHERE status = 'Em trânsito'"
+  },
+  {
+    "id": "produto-mais-exportado-peso",
+    "pergunta": "Qual produto teve o maior peso total exportado?",
+    "sql_gabarito": "SELECT descricao_produto, round(sum(peso_kg), 2) AS peso_total_kg FROM processos WHERE tipo_operacao = 'Exportação' AND status <> 'Cancelado' GROUP BY descricao_produto ORDER BY peso_total_kg DESC LIMIT 1"
+  }
+]
