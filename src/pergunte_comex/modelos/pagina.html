@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pergunte ao Comex</title>
+<meta name="description" content="Demonstração: perguntas em português sobre uma operação de comércio exterior, respondidas com SQL, tabela e gráfico.">
+<style>
+:root {
+  --fundo: #f6f4ef; --painel: #ffffff; --texto: #1c2430; --suave: #5d6878;
+  --linha: #dcd8cf; --marca: #0f5e78; --marca-fraca: #e3eef2; --codigo: #f0ede6;
+  --negativo: #b4532a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #12171d; --painel: #1a2129; --texto: #e8ecf1; --suave: #9aa6b5;
+    --linha: #2c3642; --marca: #5cb8d6; --marca-fraca: #1d3340; --codigo: #141a21;
+    --negativo: #e58a5c;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--fundo); color: var(--texto);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 1080px; margin: 0 auto; padding: 32px 16px 56px; }
+header h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); margin: 0 0 6px; letter-spacing: -0.02em; }
+header p { margin: 0; color: var(--suave); max-width: 62ch; }
+.aviso {
+  margin: 20px 0 24px; padding: 12px 14px; border-left: 3px solid var(--marca);
+  background: var(--marca-fraca); border-radius: 0 8px 8px 0; font-size: 0.93rem;
+}
+.busca { display: flex; gap: 8px; margin-bottom: 8px; }
+.busca input {
+  flex: 1; min-width: 0; padding: 12px 14px; font: inherit; color: var(--texto);
+  background: var(--painel); border: 1px solid var(--linha); border-radius: 10px;
+}
+.busca input:focus-visible, button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+.busca button {
+  padding: 0 18px; font: inherit; font-weight: 600; color: #fff; background: var(--marca);
+  border: 0; border-radius: 10px; cursor: pointer;
+}
+@media (prefers-color-scheme: dark) { .busca button { color: #0c1318; } }
+#recado { min-height: 1.5em; margin: 0 0 16px; font-size: 0.9rem; color: var(--suave); }
+.grade { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 760px) { .grade { grid-template-columns: minmax(0, 1fr); } }
+#perguntas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+#perguntas button {
+  width: 100%; text-align: left; padding: 10px 12px; font: inherit; font-size: 0.92rem;
+  color: var(--texto); background: var(--painel); border: 1px solid var(--linha);
+  border-radius: 10px; cursor: pointer;
+}
+#perguntas button:hover { border-color: var(--marca); }
+#perguntas button[aria-current="true"] { border-color: var(--marca); background: var(--marca-fraca); font-weight: 600; }
+.painel { background: var(--painel); border: 1px solid var(--linha); border-radius: 14px; padding: 20px; min-width: 0; }
+.painel h2 { margin: 0 0 14px; font-size: 1.2rem; letter-spacing: -0.01em; }
+.rotulo { margin: 18px 0 6px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--suave); }
+pre {
+  margin: 0; padding: 12px 14px; background: var(--codigo); border-radius: 10px; overflow-x: auto;
+  font: 0.84rem/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; white-space: pre-wrap; word-break: break-word;
+}
+.numero-unico { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 700; letter-spacing: -0.03em; color: var(--marca); line-height: 1.1; }
+.numero-unico small { display: block; margin-top: 4px; font-size: 0.9rem; font-weight: 500; letter-spacing: 0; color: var(--suave); }
+svg { display: block; max-width: 100%; height: auto; }
+svg text { fill: var(--texto); font: 12px system-ui, sans-serif; }
+svg .eixo { fill: var(--suave); }
+.rolagem { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--linha); text-align: left; white-space: nowrap; }
+th { font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--suave); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+footer { margin-top: 36px; font-size: 0.88rem; color: var(--suave); }
+a { color: var(--marca); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Pergunte ao Comex</h1>
+    <p>Perguntas em português sobre uma operação de comércio exterior, respondidas com SQL, tabela e gráfico.</p>
+  </header>
+
+  <p class="aviso"><strong>Esta página é uma demonstração sem IA.</strong> Ela reconhece 15 perguntas preparadas e mostra o SQL de gabarito e o resultado de cada uma. No projeto completo, a IA escreve o SQL para qualquer pergunta. A base tem 1000 processos fictícios.</p>
+
+  <form class="busca" id="busca">
+    <input id="campo" type="search" autocomplete="off" placeholder="Digite sua pergunta, por exemplo: atraso médio por modal" aria-label="Sua pergunta">
+    <button type="submit">Perguntar</button>
+  </form>
+  <p id="recado" role="status"></p>
+
+  <div class="grade">
+    <nav aria-label="Perguntas disponíveis"><ol id="perguntas"></ol></nav>
+    <section class="painel" id="resposta" aria-live="polite"></section>
+  </div>
+
+  <footer>
+    <p>Código, ETL, testes e avaliação da IA no <a href="https://github.com/sbarbosa25/pergunte-ao-comex">repositório no GitHub</a>. Dados sintéticos: clientes, transportadores e valores foram inventados.</p>
+    <p>Desenvolvido por Samuel Reis</p>
+  </footer>
+</main>
+
+<script>
+const DADOS = /*DADOS*/;
+const VAZIAS = new Set("a as o os de da das do dos e em na nas no nos que qual quais com por para um uma foi foram sao tem teve temos cada sem neste nesta esta estao leva existem".split(" "));
+const MINIMO = 0.34;
+const el = (id) => document.getElementById(id);
+
+function palavras(texto) {
+  const limpo = texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return (limpo.match(/[a-z0-9]+/g) || []).filter((p) => !VAZIAS.has(p));
+}
+function pares(lista) {
+  const junto = lista.join(" "), saida = new Set();
+  for (let i = 0; i < junto.length - 1; i++) saida.add(junto.slice(i, i + 2));
+  return saida;
+}
+function semelhanca(a, b) {
+  const pa = palavras(a), pb = palavras(b);
+  if (!pa.length || !pb.length) return 0;
+  const sa = new Set(pa), sb = new Set(pb);
+  const comuns = [...sa].filter((p) => sb.has(p)).length;
+  const jaccard = comuns / (sa.size + sb.size - comuns);
+  const ba = pares(pa), bb = pares(pb);
+  const dice = (2 * [...ba].filter((p) => bb.has(p)).length) / (ba.size + bb.size || 1);
+  return (jaccard + dice) / 2;
+}
+
+const fmtInteiro = new Intl.NumberFormat("pt-BR");
+const fmtDecimal = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function formatar(valor, tipo) {
+  if (valor === null || valor === undefined) return "";
+  if (tipo === "numero") return Number.isInteger(valor) ? fmtInteiro.format(valor) : fmtDecimal.format(valor);
+  if (tipo === "data") { const [a, m, d] = valor.split("-"); return d === "01" ? `${m}/${a.slice(2)}` : `${d}/${m}/${a}`; }
+  return String(valor);
+}
+function criar(tag, atributos = {}, texto) {
+  const svg = ["svg", "rect", "text", "line", "polyline", "circle"].includes(tag);
+  const no = svg ? document.createElementNS("http://www.w3.org/2000/svg", tag) : document.createElement(tag);
+  for (const [k, v] of Object.entries(atributos)) no.setAttribute(k, v);
+  if (texto !== undefined) no.textContent = texto;
+  return no;
+}
+const larguraDoGrafico = () => Math.max(300, Math.min(640, el("resposta").clientWidth - 42));
+const cor = (nome) => getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
+
+function graficoBarras(item, iRotulo, iValor) {
+  const linhas = item.linhas.slice(0, 20), altura = 30, topo = 6;
+  const rotulos = linhas.map((l) => formatar(l[iRotulo], item.tipos[iRotulo]));
+  const largura = larguraDoGrafico(), direita = 96;
+  const margem = Math.min(largura * 0.4, 16 + 7 * Math.max(...rotulos.map((r) => r.length)));
+  const area = largura - margem - direita;
+  const valores = linhas.map((l) => l[iValor]);
+  const min = Math.min(0, ...valores), max = Math.max(0, ...valores), faixa = max - min || 1;
+  const x = (v) => margem + ((v - min) / faixa) * area;
+  const svg = criar("svg", { width: largura, height: topo * 2 + altura * linhas.length, viewBox: `0 0 ${largura} ${topo * 2 + altura * linhas.length}`, role: "img", "aria-label": `Gráfico de barras: ${item.pergunta}` });
+  linhas.forEach((l, i) => {
+    const v = l[iValor], y = topo + i * altura;
+    svg.append(criar("text", { x: margem - 8, y: y + altura / 2 + 4, "text-anchor": "end" }, rotulos[i]));
+    svg.append(criar("rect", { x: Math.min(x(0), x(v)), y: y + 5, width: Math.max(2, Math.abs(x(v) - x(0))), height: altura - 10, rx: 3, fill: v < 0 ? cor("--negativo") : cor("--marca") }));
+    svg.append(criar("text", { x: Math.max(x(0), x(v)) + 6, y: y + altura / 2 + 4, class: "eixo" }, formatar(v, "numero")));
+  });
+  return svg;
+}
+function graficoLinha(item, iData, iValor) {
+  const largura = larguraDoGrafico(), altura = 240, m = { e: 24, d: 24, t: 24, b: 30 };
+  const valores = item.linhas.map((l) => l[iValor]);
+  const min = Math.min(0, ...valores), max = Math.max(...valores), faixa = max - min || 1;
+  const x = (i) => m.e + (i / Math.max(1, item.linhas.length - 1)) * (largura - m.e - m.d);
+  const y = (v) => altura - m.b - ((v - min) / faixa) * (altura - m.t - m.b);
+  const svg = criar("svg", { width: largura, height: altura, viewBox: `0 0 ${largura} ${altura}`, role: "img", "aria-label": `Gráfico de linha: ${item.pergunta}` });
+  svg.append(criar("line", { x1: m.e, x2: largura - m.d, y1: y(0), y2: y(0), stroke: cor("--linha") }));
+  svg.append(criar("polyline", { points: valores.map((v, i) => `${x(i)},${y(v)}`).join(" "), fill: "none", stroke: cor("--marca"), "stroke-width": 2.5, "stroke-linejoin": "round" }));
+  const passo = Math.ceil(46 / ((largura - m.e - m.d) / Math.max(1, item.linhas.length - 1)));
+  item.linhas.forEach((l, i) => {
+    svg.append(criar("circle", { cx: x(i), cy: y(l[iValor]), r: 3.5, fill: cor("--marca") }));
+    svg.append(criar("text", { x: x(i), y: y(l[iValor]) - 9, "text-anchor": "middle" }, formatar(l[iValor], "numero")));
+    if (i % passo === 0) svg.append(criar("text", { x: x(i), y: altura - 8, "text-anchor": "middle", class: "eixo" }, formatar(l[iData], "data")));
+  });
+  return svg;
+}
+function tabela(item) {
+  const t = criar("table"), cab = criar("tr");
+  item.colunas.forEach((c, i) => cab.append(criar("th", item.tipos[i] === "numero" ? { class: "num", scope: "col" } : { scope: "col" }, c)));
+  t.append(cab);
+  item.linhas.forEach((l) => {
+    const tr = criar("tr");
+    l.forEach((v, i) => tr.append(criar("td", item.tipos[i] === "numero" ? { class: "num" } : {}, formatar(v, item.tipos[i]))));
+    t.append(tr);
+  });
+  const caixa = criar("div", { class: "rolagem" });
+  caixa.append(t);
+  return caixa;
+}
+
+function mostrar(item, rolar = false) {
+  const painel = el("resposta");
+  painel.replaceChildren(criar("h2", {}, item.pergunta));
+  const numerica = item.tipos.indexOf("numero"), rotulo = item.tipos.findIndex((t) => t !== "numero");
+  const unico = item.linhas.length === 1;
+  if (unico && item.colunas.length === 1) {
+    const n = criar("div", { class: "numero-unico" }, formatar(item.linhas[0][0], item.tipos[0]));
+    n.append(criar("small", {}, item.colunas[0]));
+    painel.append(n);
+  } else if (unico && numerica >= 0 && rotulo >= 0) {
+    const n = criar("div", { class: "numero-unico" }, formatar(item.linhas[0][rotulo], item.tipos[rotulo]));
+    n.append(criar("small", {}, `${item.colunas[numerica]}: ${formatar(item.linhas[0][numerica], "numero")}`));
+    painel.append(n);
+  } else if (item.colunas.length === 2 && numerica >= 0 && rotulo >= 0) {
+    painel.append(criar("div", { class: "rotulo" }, "Gráfico"));
+    painel.append(item.tipos[rotulo] === "data" ? graficoLinha(item, rotulo, numerica) : graficoBarras(item, rotulo, numerica));
+  }
+  if (!(unico && item.colunas.length === 1)) {
+    painel.append(criar("div", { class: "rotulo" }, "Resultado"));
+    painel.append(tabela(item));
+  }
+  painel.append(criar("div", { class: "rotulo" }, "SQL executado"));
+  painel.append(criar("pre", {}, item.sql));
+  document.querySelectorAll("#perguntas button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.id === item.id)));
+  history.replaceState(null, "", `#${item.id}`);
+  if (rolar && matchMedia("(max-width: 760px)").matches) painel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+DADOS.forEach((item) => {
+  const li = criar("li"), botao = criar("button", { type: "button", "data-id": item.id }, item.pergunta);
+  botao.addEventListener("click", () => { el("recado").textContent = ""; mostrar(item, true); });
+  li.append(botao);
+  el("perguntas").append(li);
+});
+
+el("busca").addEventListener("submit", (evento) => {
+  evento.preventDefault();
+  const texto = el("campo").value.trim();
+  if (!texto) return;
+  const notas = DADOS.map((item) => [semelhanca(texto, item.pergunta), item]).sort((a, b) => b[0] - a[0]);
+  if (notas[0][0] < MINIMO) {
+    el("recado").textContent = "Não reconheci essa pergunta. Esta demonstração só responde perguntas próximas das que estão na lista.";
+    return;
+  }
+  el("recado").textContent = `Pergunta reconhecida: ${notas[0][1].pergunta}`;
+  mostrar(notas[0][1], true);
+});
+
+mostrar(DADOS.find((item) => item.id === location.hash.slice(1)) || DADOS.find((item) => item.id === "atraso-medio-por-modal") || DADOS[0]);
+</script>
+</body>
+</html>

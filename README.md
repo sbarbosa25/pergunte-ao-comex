@@ -26,9 +26,15 @@ Gráfico salvo em saida/resposta.png
 
 ![Gráfico gerado para a pergunta sobre atraso médio por modal](docs/exemplo-grafico.png)
 
-## Teste em 1 minuto, sem chave de IA
+## Teste agora, sem instalar nada
 
-Não precisa de conta nem de chave de API para experimentar. O modo demonstração responde a partir de um catálogo de 15 perguntas prontas:
+**[Abrir a demonstração no navegador](https://sbarbosa25.github.io/pergunte-ao-comex/)**
+
+A página traz as 15 perguntas do catálogo, cada uma com gráfico, tabela e o SQL executado. Dá para clicar em uma pergunta ou digitar a sua. Ela é uma demonstração sem IA: os resultados foram calculados na publicação, a partir da mesma base e dos mesmos SQLs de gabarito usados na avaliação.
+
+## Teste em 1 minuto no terminal, sem chave de IA
+
+Não precisa de conta nem de chave de API para experimentar. O modo demonstração responde a partir do mesmo catálogo de 15 perguntas:
 
 ```bash
 git clone https://github.com/sbarbosa25/pergunte-ao-comex.git
@@ -62,6 +68,7 @@ pergunta -> IA escreve o SQL -> trava de segurança -> DuckDB -> tabela + gráfi
 | Dicionário de dados | `src/pergunte_comex/esquema.py` | Descrição das colunas, usada pelo ETL e pela IA |
 | IA | `src/pergunte_comex/ia.py` | Monta o prompt e pede o SQL ao modelo |
 | Demonstração | `src/pergunte_comex/demo.py` | Responde sem IA, a partir do catálogo de perguntas |
+| Página web | `src/pergunte_comex/pagina.py` | Gera o HTML da demonstração publicada no GitHub Pages |
 | Segurança | `src/pergunte_comex/sql_seguro.py` | Só deixa passar um SELECT |
 | Consulta | `src/pergunte_comex/responder.py` | Executa em conexão somente leitura |
 | Saída | `src/pergunte_comex/saida.py` | Tabela no terminal e gráfico em PNG |
@@ -126,13 +133,16 @@ O workflow `.github/workflows/ci.yml` roda em todo push na `main` e em todo pull
 - ETL com as validações;
 - testes com pytest;
 - conferência dos gabaritos;
-- modo demonstração rodando de ponta a ponta, sem chave.
+- modo demonstração rodando de ponta a ponta, sem chave;
+- geração da página de demonstração.
+
+Um segundo workflow, `.github/workflows/pages.yml`, gera a página e publica no GitHub Pages a cada push na `main`. A página nunca é editada à mão: se a base ou um gabarito muda, ela é refeita.
 
 Um segundo job avalia a IA de verdade. Ele só roda se o repositório tiver o secret `ANTHROPIC_API_KEY` (Settings, Secrets and variables, Actions); sem o secret, o job é pulado e avisa no resumo.
 
 ## Próximos passos
 
-- Interface web para perguntar pelo navegador
+- Perguntas livres pelo navegador, com a IA respondendo
 - Resposta em texto corrido além da tabela
 - Mais perguntas na avaliação, incluindo perguntas que a base não consegue responder
 - Histórico da taxa de acerto por commit
