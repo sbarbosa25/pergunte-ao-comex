@@ -1,12 +1,13 @@
 __pycache__/
 *.py[cod]
+*.egg-info/
 .venv/
 venv/
 .env
 .pytest_cache/
 .ruff_cache/
-data/
 *.duckdb
 *.duckdb.wal
+saida/
 .ipynb_checkpoints/
 .DS_Store
