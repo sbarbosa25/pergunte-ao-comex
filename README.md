@@ -74,7 +74,7 @@ pergunta -> IA escreve o SQL -> trava de segurança -> DuckDB -> tabela + gráfi
 | Demonstração | `src/pergunte_comex/demo.py` | Responde sem IA, a partir do catálogo de perguntas |
 | Página web | `src/pergunte_comex/pagina.py` | Gera o HTML da demonstração publicada no GitHub Pages |
 | Segurança | `src/pergunte_comex/sql_seguro.py` | Só deixa passar um SELECT |
-| Consulta | `src/pergunte_comex/responder.py` | Executa em conexão somente leitura |
+| Consulta | `src/pergunte_comex/responder.py` | Executa em conexão somente leitura, com teto de linhas, tempo, memória e disco |
 | Saída | `src/pergunte_comex/saida.py` | Tabela no terminal e gráfico em PNG |
 | Avaliação | `avaliacao/` | 15 perguntas com gabarito e o avaliador |
 
@@ -127,11 +127,14 @@ O modelo padrão é `claude-sonnet-5-5`. Para trocar, use `--modelo` ou a variá
 
 ## Segurança do SQL gerado
 
-O SQL vem de um modelo de linguagem, então ele é tratado como entrada não confiável. Três barreiras independentes ficam entre a IA e o banco:
+O SQL vem de um modelo de linguagem, então ele é tratado como entrada não confiável. Quatro barreiras independentes ficam entre a IA e o banco. As três primeiras controlam o que a consulta pode fazer; a quarta, quanto ela pode custar:
 
 1. `sql_seguro.validar` aceita um único comando, que precisa ser `SELECT` ou `WITH ... SELECT`, e recusa palavras de escrita e funções de leitura de arquivo.
 2. A conexão com o DuckDB é aberta em modo somente leitura.
 3. O acesso externo do DuckDB é desligado antes da consulta, então nenhum SQL consegue ler arquivos do disco.
+4. A consulta tem teto de custo: no máximo 10.000 linhas lidas, 10 segundos de execução (um temporizador chama `con.interrupt()`), 512 MB de memória e 1 GB de arquivos temporários em disco. Um `SELECT` válido com produto cartesiano passa pelas três primeiras barreiras e para nesta.
+
+A quarta barreira nasceu de uma revisão pública do projeto, que apontou que o resultado era lido com `fetchall`, sem limite de linhas nem de tempo. Ao testar a correção, uma ordenação sobre um produto cartesiano gravou 24 GB de arquivos temporários em dois minutos, e por isso o teto de disco entrou junto.
 
 ## Avaliação automática da IA
 

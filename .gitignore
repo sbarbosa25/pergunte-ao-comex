@@ -8,6 +8,7 @@ venv/
 .ruff_cache/
 *.duckdb
 *.duckdb.wal
+*.duckdb.tmp/
 saida/
 site/
 .ipynb_checkpoints/

@@ -17,7 +17,7 @@ import duckdb
 from pergunte_comex import BANCO, RAIZ, etl
 from pergunte_comex.demo import GeradorDemo, PerguntaForaDoCatalogo, carregar_catalogo
 from pergunte_comex.ia import GeradorClaude, GeradorSQL, IAIndisponivel
-from pergunte_comex.responder import responder
+from pergunte_comex.responder import LimiteExcedido, responder
 from pergunte_comex.saida import grafico, tabela
 from pergunte_comex.sql_seguro import SQLRecusado
 
@@ -37,7 +37,7 @@ def _listar_exemplos() -> None:
 def _responder(pergunta: str, gerador: GeradorSQL, destino_grafico: Path | None) -> int:
     try:
         resposta = responder(pergunta, gerador)
-    except (PerguntaForaDoCatalogo, SQLRecusado) as erro:
+    except (PerguntaForaDoCatalogo, SQLRecusado, LimiteExcedido) as erro:
         print(f"Erro: {erro}", file=sys.stderr)
         return 1
     except duckdb.Error as erro:

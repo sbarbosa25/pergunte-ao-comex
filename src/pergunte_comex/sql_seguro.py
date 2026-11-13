@@ -3,7 +3,8 @@
 A IA só pode consultar. Três barreiras garantem isso: esta validação, que
 aceita apenas um SELECT (ou WITH ... SELECT); a conexão com o banco, aberta em
 modo somente leitura; e o acesso externo do DuckDB desligado na hora da
-consulta, para que nenhum SQL consiga ler arquivos do disco.
+consulta, para que nenhum SQL consiga ler arquivos do disco. Uma quarta
+barreira, em responder.py, limita o custo da consulta (linhas, tempo e memória).
 """
 
 from __future__ import annotations
