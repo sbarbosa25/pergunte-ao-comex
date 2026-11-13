@@ -134,7 +134,7 @@ O SQL vem de um modelo de linguagem, então ele é tratado como entrada não con
 3. O acesso externo do DuckDB é desligado antes da consulta, então nenhum SQL consegue ler arquivos do disco.
 4. A consulta tem teto de custo: no máximo 10.000 linhas lidas, 10 segundos de execução (um temporizador chama `con.interrupt()`), 512 MB de memória e 1 GB de arquivos temporários em disco. Um `SELECT` válido com produto cartesiano passa pelas três primeiras barreiras e para nesta.
 
-A quarta barreira nasceu de uma revisão pública do projeto, que apontou que o resultado era lido com `fetchall`, sem limite de linhas nem de tempo. Ao testar a correção, uma ordenação sobre um produto cartesiano gravou 24 GB de arquivos temporários em dois minutos, e por isso o teto de disco entrou junto.
+A quarta barreira nasceu de uma revisão pública do projeto feita por Diego Arruda, que apontou que o resultado era lido com `fetchall`, sem limite de linhas nem de tempo, e sugeriu o caminho da correção. Ao testar a correção, uma ordenação sobre um produto cartesiano gravou 24 GB de arquivos temporários em dois minutos, e por isso o teto de disco entrou junto.
 
 ## Avaliação automática da IA
 
